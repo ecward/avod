@@ -70,7 +70,7 @@ class BevOnlyRpnModel(model.DetectionModel):
         """
 
         # Sets model configs (_config)
-        super(RpnModel, self).__init__(model_config)
+        super(BevOnlyRpnModel, self).__init__(model_config)
 
         if train_val_test not in ["train", "val", "test"]:
             raise ValueError('Invalid train_val_test value,'
@@ -104,9 +104,6 @@ class BevOnlyRpnModel(model.DetectionModel):
         self._bev_feature_extractor = \
             feature_extractor_builder.get_extractor(
                 self._config.layers_config.bev_feature_extractor)
-        self._img_feature_extractor = \
-            feature_extractor_builder.get_extractor(
-                self._config.layers_config.img_feature_extractor)
 
         # Network input placeholders
         self.placeholders = dict()
@@ -193,12 +190,6 @@ class BevOnlyRpnModel(model.DetectionModel):
                                       self.PL_BEV_ANCHORS)
                 self._bev_anchors_norm_pl = self._add_placeholder(
                     tf.float32, [None, 4], self.PL_BEV_ANCHORS_NORM)
-
-            with tf.variable_scope('img_anchor_projections'):
-                self._add_placeholder(tf.float32, [None, 4],
-                                      self.PL_IMG_ANCHORS)
-                self._img_anchors_norm_pl = self._add_placeholder(
-                    tf.float32, [None, 4], self.PL_IMG_ANCHORS_NORM)
 
             with tf.variable_scope('saample_info'):
                 # the calib matrix shape is (3 x 4)
@@ -730,14 +721,8 @@ class BevOnlyRpnModel(model.DetectionModel):
         bev_anchors, bev_anchors_norm = anchor_projector.project_to_bev(
             anchors_to_use, self._bev_extents)
 
-        # Project box_3d anchors into image space
-        img_anchors, img_anchors_norm = \
-            anchor_projector.project_to_image_space(
-                anchors_to_use, stereo_calib_p2, image_shape)
-
         # Reorder into [y1, x1, y2, x2] for tf.crop_and_resize op
         self._bev_anchors_norm = bev_anchors_norm[:, [1, 0, 3, 2]]
-        self._img_anchors_norm = img_anchors_norm[:, [1, 0, 3, 2]]
 
         # Fill in placeholder inputs
         self._placeholder_inputs[self.PL_ANCHORS] = anchors_to_use
@@ -768,9 +753,6 @@ class BevOnlyRpnModel(model.DetectionModel):
         self._placeholder_inputs[self.PL_BEV_ANCHORS] = bev_anchors
         self._placeholder_inputs[self.PL_BEV_ANCHORS_NORM] = \
             self._bev_anchors_norm
-        self._placeholder_inputs[self.PL_IMG_ANCHORS] = img_anchors
-        self._placeholder_inputs[self.PL_IMG_ANCHORS_NORM] = \
-            self._img_anchors_norm
 
     def loss(self, prediction_dict):
 

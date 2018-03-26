@@ -14,7 +14,9 @@ from avod.core import summary_utils
 from avod.core import trainer_utils
 
 from avod.core.models.avod_model import AvodModel
+from avod.core.models.bev_only_avod_model import BevOnlyAvodModel
 from avod.core.models.rpn_model import RpnModel
+from avod.core.models.bev_only_rpn_model import BevOnlyRpnModel
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -64,7 +66,7 @@ class Evaluator:
 
         self.model_config = model.model_config
         self.model_name = self.model_config.model_name
-        self.full_model = isinstance(self.model, AvodModel)
+        self.full_model = isinstance(self.model, AvodModel) or isinstance(self.model,BevOnlyAvodModel)
 
         self.paths_config = self.model_config.paths_config
         self.checkpoint_dir = self.paths_config.checkpoint_dir
@@ -104,6 +106,7 @@ class Evaluator:
 
         # The model should return a dictionary of predictions
         self._prediction_dict = self.model.build()
+        print("evaluator: prediction_dict = ",self._prediction_dict)
         if eval_mode == 'val':
             # Setup loss and summary writer in val mode only
             self._loss_dict, self._total_loss = \
@@ -183,6 +186,8 @@ class Evaluator:
 
             # Avod average losses dictionary
             eval_avod_losses = self._create_avod_losses_dict()
+        else:
+            print("not using full_model, no box representation (?)")
 
         num_valid_samples = 0
 
@@ -250,11 +255,13 @@ class Evaluator:
                 proposals_and_scores = \
                     self.get_rpn_proposals_and_scores(predictions)
                 np.savetxt(rpn_file_path, proposals_and_scores, fmt='%.3f')
+                print("Got proposals")
 
                 # Save predictions
                 predictions_and_scores = \
                     self.get_avod_predicted_boxes_3d_and_scores(predictions,
                                                                 box_rep)
+                print("Got predictions")
                 np.savetxt(avod_file_path, predictions_and_scores, fmt='%.5f')
 
                 if self.full_model:
@@ -302,14 +309,22 @@ class Evaluator:
                 total_feed_dict_time.append(feed_dict_time)
                 total_inference_time.append(inference_time)
 
+                get_box_start_time = time.time()
                 proposals_and_scores = \
                     self.get_rpn_proposals_and_scores(predictions)
                 predictions_and_scores = \
                     self.get_avod_predicted_boxes_3d_and_scores(predictions,
                                                                 box_rep)
+                get_box_time = time.time()-get_box_start_time
+                print("Got predictions, feed_dict_time = ",feed_dict_time,\
+                      "inference_time = ",inference_time," get boxes time = ",get_box_time)
 
                 np.savetxt(rpn_file_path, proposals_and_scores, fmt='%.3f')
                 np.savetxt(avod_file_path, predictions_and_scores, fmt='%.5f')
+
+            #time it took
+            end_time = time.time()
+            print("Time taken = ",end_time-start_time,"s")
 
         # end while current_epoch == model.dataset.epochs_completed:
 

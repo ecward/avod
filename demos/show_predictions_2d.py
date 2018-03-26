@@ -46,6 +46,7 @@ def main():
     # Options
     ##############################
     dataset_config.data_split = 'val'
+    dataset_config.dataset_dir = '/media/erik/3tb/KITTY_DATA/3d_object_data'
 
     fig_size = (10, 6.1)
 
@@ -57,7 +58,8 @@ def main():
 
     # Overwrite this to select a specific checkpoint
     global_step = None
-    checkpoint_name = 'avod_cars_example'
+    checkpoint_name = 'bev_only_avod_cars'
+    #checkpoint_name = 'avod_cars_example'
 
     # Drawing Toggles
     draw_proposals_separate = False

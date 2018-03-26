@@ -73,9 +73,9 @@ def get_configs_from_pipeline_file(pipeline_config_path,
     # Make sure the checkpoint name matches the config filename
     config_file_name = \
         os.path.split(pipeline_config_path)[1].split('.')[0]
-    checkpoint_name = model_config.checkpoint_name
-    if config_file_name != checkpoint_name:
-        raise ValueError('Config and checkpoint names must match.')
+    checkpoint_name = model_config.checkpoint_name    
+    if config_file_name != checkpoint_name:        
+        raise ValueError('Config and checkpoint names ('+str(config_file_name)+", "+str(checkpoint_name)+')must match.')
 
     output_root_dir = avod.root_dir() + '/data/outputs/' + checkpoint_name
 
