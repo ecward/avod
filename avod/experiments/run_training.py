@@ -13,6 +13,7 @@ import avod.builders.config_builder_util as config_builder
 from avod.builders.dataset_builder import DatasetBuilder
 from avod.core.models.avod_model import AvodModel
 from avod.core.models.rpn_model import RpnModel
+from avod.core.models.bev_only_rpn_model import BevOnlyRpnModel
 from avod.core import trainer
 
 tf.logging.set_verbosity(tf.logging.ERROR)
@@ -31,6 +32,10 @@ def train(model_config, train_config, dataset_config):
             model = RpnModel(model_config,
                              train_val_test=train_val_test,
                              dataset=dataset)
+        elif model_name == 'bev_only_rpn_model':
+            model = BevOnlyRpnModel(model_config,
+                                    train_val_test=train_val_test,
+                                    dataset=dataset)
         elif model_name == 'avod_model':
             model = AvodModel(model_config,
                               train_val_test=train_val_test,
